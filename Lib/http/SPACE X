@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dell | Orbital Creative Portfolio</title>
+    <meta name="description" content="Personal interactive portfolio of Dell, engineered with a scroll-rotatable orbital mind map layout.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Canvas for particle stream network -->
+    <canvas id="ambient-canvas"></canvas>
+
+    <!-- UI Overlay Elements -->
+    <div class="cyber-scanlines"></div>
+
+    <!-- App Header -->
+    <header class="app-header">
+        <div class="logo">
+            <i class="fa-solid fa-satellite-dish pulse-glow"></i>
+            <span>DELL_PORTAL</span>
+        </div>
+        <div class="controls-panel">
+            <span class="ctrl-label">NODE FILTERS:</span>
+            <button class="filter-btn active" data-category="all">All</button>
+            <button class="filter-btn" data-category="identity">Identity</button>
+            <button class="filter-btn" data-category="creations">Creations</button>
+            <button class="filter-btn" data-category="network">Network</button>
+        </div>
+        <div class="header-actions">
+            <button class="cyber-btn" id="grid-snap-btn" title="Snap to Linear Grid">
+                <i class="fa-solid fa-table-cells-large"></i>
+                <span>GRID SNAP</span>
+            </button>
+            <button class="cyber-btn secondary" id="overdrive-toggle">
+                <i class="fa-solid fa-radiation"></i>
+                <span>OVERDRIVE</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Panoramic Workspace -->
+    <div class="workspace">
+        <section class="viewport" id="map-viewport">
+            <!-- SVG paths layer for connection lines -->
+            <svg class="line-overlay" id="svg-connections"></svg>
+
+            <!-- Draggable Map Board -->
+            <div class="map-board" id="map-board">
+                <!-- Center Core Profile Node -->
+                <div class="core-profile" id="center-core">
+                    <div class="avatar-box">
+                        <img src="avatar.jpg" alt="Dell Avatar" onerror="this.src='https://placehold.co/120x120/0f172a/00f0ff?text=DELL'">
+                    </div>
+                    <div class="core-title">
+                        <span class="core-name">DELL</span>
+                        <span class="core-sub">COGNITIVE DEV</span>
+                    </div>
+                    <!-- Concentric Orbit Guides -->
+                    <div class="orbit-guide ring-1"></div>
+                    <div class="orbit-guide ring-2"></div>
+                    <div class="orbit-guide ring-3"></div>
+                </div>
+
+                <!-- Satellites will be injected dynamically by JS -->
+            </div>
+
+            <!-- Dashboard HUD info -->
+            <div class="system-hud">
+                <div class="hud-item">
+                    <span class="lbl">LATENCY:</span>
+                    <span class="val" style="color: var(--neon-cyan)">0.04 ms</span>
+                </div>
+                <div class="hud-item">
+                    <span class="lbl">COGNITIVE LEVEL:</span>
+                    <span class="val" style="color: var(--neon-purple)">SYNCHRONIZED</span>
+                </div>
+            </div>
+
+            <!-- Dynamic Guide overlay -->
+            <div class="navigation-tooltip">
+                <i class="fa-solid fa-circle-info"></i> Drag backdrop to pan. Scroll mouse wheel to rotate orbits. Click nodes to inspect.
+            </div>
+        </section>
+
+        <!-- Right sliding details drawer -->
+        <aside class="details-drawer" id="side-drawer">
+            <div class="drawer-header">
+                <div class="drawer-badge" id="drawer-tag">PORTAL NODE</div>
+                <button class="close-btn" id="close-drawer"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="drawer-scroll-container" id="drawer-body-container">
+                <div class="drawer-placeholder">
+                    <i class="fa-solid fa-circle-nodes"></i>
+                    <h3>Portal Node Scanner</h3>
+                    <p>Select any floating satellite node on the orbital canvas map to connect and read diagnostic data.</p>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+// Portfolio Nodes Data
+const nodesData = [
+    {
+        id: "about",
+        title: "Profile Identity",
+        category: "identity",
+        icon: "fa-user-ninja",
+        color: "var(--neon-cyan)",
+        glow: "0 0 15px rgba(0, 240, 255, 0.4)",
+        ring: 1,
+        angle: 0,
+        type: "about"
+    },
+    {
+        id: "skills",
+        title: "Skill Competencies",
+        category: "identity",
+        icon: "fa-sliders",
+        color: "var(--neon-cyan)",
+        glow: "0 0 15px rgba(0, 240, 255, 0.4)",
+        ring: 1,
+        angle: Math.PI,
+        type: "skills"
+    },
+    {
+        id: "proj-dream",
+        title: "REM Dream Engine",
+        category: "creations",
+        icon: "fa-moon",
+        color: "var(--neon-purple)",
+        glow: "0 0 15px rgba(189, 0, 255, 0.4)",
+        ring: 2,
+        angle: Math.PI / 4,
+        type: "project",
+        image: "project_dream.jpg",
+        tagline: "EEG-to-WebXR Dreamscape Decoder",
+        description: "A decentralized pipeline translating neural sleep telemetry into interactive 3D virtual spaces. Allows users to record, archive, and walk through their dreams in immersive VR.",
+        tech: ["OpenNeuro WebAPI", "Three.js", "Neural-GAN Renderers", "WebXR"],
+        features: ["Thought-controlled spatial layout shifts", "Biometric state sleep logs", "Lucid dreaming multiplayer portals"]
+    },
+    {
+        id: "proj-fashion",
+        title: "AtmosWeave Wearables",
+        category: "creations",
+        icon: "fa-shirt",
+        color: "var(--neon-purple)",
+        glow: "0 0 15px rgba(189, 0, 255, 0.4)",
+        ring: 2,
+        angle: (3 * Math.PI) / 4,
+        type: "project",
+        image: "project_fashion.jpg",
+        tagline: "Atmosphere-Reactive Digital Garments",
+        description: "A software framework bridging smart fabric hardware threads to weather API telemetry, changing colors, textures, and thickness of garments in real time.",
+        tech: ["IoT Biosensors", "SVG Mesh Warp", "Local Weather WebAPI", "WebSynth"],
+        features: ["Refractive color index mapping", "UV exposure auto-insulation", "Carbon-absorption glow indicators"]
+    },
+    {
+        id: "proj-memory",
+        title: "ChronosVault",
+        category: "creations",
+        icon: "fa-map-location-dot",
+        color: "var(--neon-purple)",
+        glow: "0 0 15px rgba(189, 0, 255, 0.4)",
+        ring: 2,
+        angle: (5 * Math.PI) / 4,
+        type: "project",
+        image: "project_memory.jpg",
+        tagline: "Geolocated AR Memory Archives",
+        description: "A spatial mapping network geolocating compressed point-cloud 3D recordings to physical coordinate indexes, allowing history walks through AR glass portals.",
+        tech: ["WebSpatial 3D Grid", "Point-Cloud Compression", "GPS Core", "AR Glasses APIs"],
+        features: ["Historical temporal coordinate sliders", "Coordinates-based message anchors", "Family point-cloud archive folders"]
+    },
+    {
+        id: "proj-collab",
+        title: "Synapse-Collab",
+        category: "creations",
+        icon: "fa-brain",
+        color: "var(--neon-purple)",
+        glow: "0 0 15px rgba(189, 0, 255, 0.4)",
+        ring: 2,
+        angle: (7 * Math.PI) / 4,
+        type: "project",
+        image: "project_collab.jpg",
+        tagline: "High-Sync Brainwave Workspace",
+        description: "A developer cockpit linking real-time EEG brainwave channels to match co-workers' focus oscillations, establishing high-focus workspaces and filtering triggers.",
+        tech: ["Oscillation Matchers", "Cognitive API", "Synaptic Firewalls", "WebAssembly"],
+        features: ["Cognitive load balance indicators", "Brainwave synced code modules", "Focus-mode background blur triggers"]
+    },
+    {
+        id: "console",
+        title: "Interactive Terminal",
+        category: "network",
+        icon: "fa-terminal",
+        color: "var(--neon-amber)",
+        glow: "0 0 15px rgba(255, 170, 0, 0.4)",
+        ring: 3,
+        angle: Math.PI / 2,
+        type: "console"
+    },
+    {
+        id: "contact",
+        title: "Network Connection",
+        category: "network",
+        icon: "fa-satellite",
+        color: "var(--neon-pink)",
+        glow: "0 0 15px rgba(255, 0, 127, 0.4)",
+        ring: 3,
+        angle: (3 * Math.PI) / 2,
+        type: "contact"
+    }
+];
+
+// DOM Elements
+const viewport = document.getElementById("map-viewport");
+const board = document.getElementById("map-board");
+const connectionsSvg = document.getElementById("svg-connections");
+const drawer = document.getElementById("side-drawer");
+const drawerBody = document.getElementById("drawer-body-container");
+const drawerTag = document.getElementById("drawer-tag");
+const closeDrawerBtn = document.getElementById("close-drawer");
+const gridSnapBtn = document.getElementById("grid-snap-btn");
+const overdriveBtn = document.getElementById("overdrive-toggle");
+const filterBtns = document.querySelectorAll(".filter-btn");
+
+// Canvas configuration
+const canvas = document.getElementById("ambient-canvas");
+const ctx = canvas.getContext("2d");
+
+// Interactive Viewport Constants
+const center = { x: 1200, y: 1200 };
+const ringRadii = { 1: 190, 2: 340, 3: 490 };
+
+let zoom = 1;
+let transX = 0;
+let transY = 0;
+let dragActive = false;
+let startMouseX = 0;
+let startMouseY = 0;
+let globalRotationOffset = 0;
+let activeNodeId = null;
+let gridModeActive = false;
+
+// Initialize particles for ambient flow animation
+let particles = [];
+const particleCount = 100;
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+class AmbientParticle {
+    constructor() {
+        this.reset();
+        this.y = Math.random() * canvas.height;
+    }
+
+    reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = -10;
+        this.vy = Math.random() * 1.5 + 0.5;
+        this.size = Math.random() * 2 + 0.5;
+        this.alpha = Math.random() * 0.3 + 0.05;
+        this.color = Math.random() > 0.5 ? "0, 240, 255" : "189, 0, 255";
+    }
+
+    update() {
+        this.y += this.vy;
+        if (this.y > canvas.height) {
+            this.reset();
+        }
+    }
+
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${this.color}, ${this.alpha})`;
+        ctx.fill();
+    }
+}
+
+for (let i = 0; i < particleCount; i++) {
+    particles.push(new AmbientParticle());
+}
+
+function animateParticles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+        p.update();
+        p.draw();
+    });
+    requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+// Center the viewport on the center profile node
+function centerViewport() {
+    const vRect = viewport.getBoundingClientRect();
+    transX = vRect.width / 2 - center.x;
+    transY = vRect.height / 2 - center.y;
+    updateBoardTransform();
+}
+
+function updateBoardTransform() {
+    board.style.transform = `translate(${transX}px, ${transY}px) scale(${zoom})`;
+}
+
+// Click and Drag backdrop to pan
+viewport.addEventListener("mousedown", (e) => {
+    if (e.target.closest(".satellite-node") || e.target.closest(".avatar-box")) return;
+    dragActive = true;
+    viewport.classList.add("dragging");
+    startMouseX = e.clientX - transX;
+    startMouseY = e.clientY - transY;
+});
+
+window.addEventListener("mousemove", (e) => {
+    if (!dragActive) return;
+    transX = e.clientX - startMouseX;
+    transY = e.clientY - startMouseY;
+    updateBoardTransform();
+});
+
+window.addEventListener("mouseup", () => {
+    dragActive = false;
+    viewport.classList.remove("dragging");
+});
+
+// Scroll wheel to rotate orbits
+viewport.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    if (gridModeActive) return; // Disable rotation when grid is snapped
+
+    const speed = e.deltaY * 0.001;
+    globalRotationOffset += speed;
+    repositionNodes();
+    drawConnections();
+});
+
+// Reposition Satellite Nodes on Concentric Rings
+function repositionNodes() {
+    const nodes = document.querySelectorAll(".satellite-node");
+    nodes.forEach(node => {
+        const id = node.getAttribute("data-id");
+        const item = nodesData.find(x => x.id === id);
+        if (!item) return;
+
+        const radius = ringRadii[item.ring];
+        const angle = item.angle + globalRotationOffset;
+
+        const x = center.x + radius * Math.cos(angle) - 33;
+        const y = center.y + radius * Math.sin(angle) - 33;
+
+        node.style.left = `${x}px`;
+        node.style.top = `${y}px`;
+    });
+}
+
+// Generate satellite elements inside HTML
+function injectNodes() {
+    // Clear nodes
+    const existing = board.querySelectorAll(".satellite-node");
+    existing.forEach(e => e.remove());
+
+    nodesData.forEach(item => {
+        const node = document.createElement("div");
+        node.className = "satellite-node";
+        node.setAttribute("data-id", item.id);
+        node.style.setProperty("--n-color", item.color);
+        node.style.setProperty("--n-glow", item.glow);
+
+        node.innerHTML = `
+            <i class="fa-solid ${item.icon}"></i>
+            <div class="node-title-label">${item.title}</div>
+        `;
+
+        node.addEventListener("click", () => selectNode(item.id));
+        board.appendChild(node);
+    });
+
+    repositionNodes();
+    drawConnections();
+}
+
+// Draw connection lines connecting core to satellites
+function drawConnections() {
+    connectionsSvg.innerHTML = "";
+    
+    const vRect = viewport.getBoundingClientRect();
+    connectionsSvg.setAttribute("width", vRect.width);
+    connectionsSvg.setAttribute("height", vRect.height);
+
+    nodesData.forEach(item => {
+        const node = board.querySelector(`.satellite-node[data-id="${item.id}"]`);
+        if (!node || node.classList.contains("filtered")) return;
+
+        const nodeRect = node.getBoundingClientRect();
+        const coreNode = board.querySelector(".avatar-box");
+        const coreRect = coreNode.getBoundingClientRect();
+
+        const x1 = coreRect.left + coreRect.width / 2 - vRect.left;
+        const y1 = coreRect.top + coreRect.height / 2 - vRect.top;
+        const x2 = nodeRect.left + nodeRect.width / 2 - vRect.left;
+        const y2 = nodeRect.top + nodeRect.height / 2 - vRect.top;
+
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x1);
+        line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2);
+        line.setAttribute("y2", y2);
+
+        if (item.id === activeNodeId) {
+            line.setAttribute("stroke", item.color);
+            line.setAttribute("stroke-width", "2");
+            line.style.filter = `drop-shadow(0 0 4px ${item.color})`;
+            line.setAttribute("stroke-dasharray", "8, 4");
+            line.setAttribute("stroke-dashoffset", "0");
+            line.style.animation = "pulseDash 1.5s infinite linear";
+
+            // Register pulse animation once
+            if (!document.getElementById("svg-pulse-dash-anim")) {
+                const style = document.createElement("style");
+                style.id = "svg-pulse-dash-anim";
+                style.textContent = `@keyframes pulseDash { to { stroke-dashoffset: -24; } }`;
+                document.head.appendChild(style);
+            }
+        } else {
+            line.setAttribute("stroke", "rgba(255,255,255,0.04)");
+            line.setAttribute("stroke-width", "1");
+        }
+
+        connectionsSvg.appendChild(line);
+    });
+}
+
+// Select node, center view, and inject layout data in sliding panel
+function selectNode(id) {
+    const item = nodesData.find(x => x.id === id);
+    if (!item) return;
+
+    activeNodeId = id;
+
+    // Set highlights on selected node element
+    document.querySelectorAll(".satellite-node").forEach(node => {
+        if (node.getAttribute("data-id") === id) {
+            node.classList.add("active");
+        } else {
+            node.classList.remove("active");
+        }
+    });
+
+    // Update drawer header accent colors
+    drawer.style.setProperty("--dw-color", item.color);
+    drawerTag.textContent = item.category.toUpperCase();
+
+    // Populate drawer body
+    injectDrawerContent(item);
+
+    drawer.classList.add("open");
+    drawConnections();
+}
+
+// Construct detailed content formats based on node type
+function injectDrawerContent(item) {
+    if (item.type === "about") {
+        drawerBody.innerHTML = `
+            <div class="dw-content">
+                <div class="dw-title-block">
+                    <h2>Dell</h2>
+                    <div class="dw-tagline">Cognitive Web Architect & BCI Integrator</div>
+                </div>
+                <div class="dw-img-box">
+                    <img src="avatar.jpg" alt="Dell profile photo">
+                </div>
+                <p class="dw-desc">
+                    Greetings observer. I am Dell, a developer exploring the boundaries of user experience design. I build interactive workspaces that bypass traditional grid constraints, linking computational code frameworks to experimental hardware interfaces.
+                </p>
+                <div class="dw-card">
+                    <div class="dw-card-title"><i class="fa-solid fa-code-fork"></i> PROFILE DETAILS</div>
+                    <ul class="dw-list">
+                        <li><strong>Specialty</strong>: Dynamic Spatial Vectors, Canvas Systems, and API compilers.</li>
+                        <li><strong>Mantra</strong>: "Break structural grids to discover interface flow."</li>
+                        <li><strong>Location Coordinates</strong>: 34.0522 N, 118.2437 W</li>
+                    </ul>
+                </div>
+            </div>
+        `;
+    } else if (item.type === "skills") {
+        drawerBody.innerHTML = `
+            <div class="dw-content">
+                <div class="dw-title-block">
+                    <h2>Skill Metrics</h2>
+                    <div class="dw-tagline">Validated Cognitive Capacities</div>
+                </div>
+                <p class="dw-desc">
+                    Real-time data compilation measuring programming efficiency, structural layout mathematics, and framework deployment speeds.
+                </p>
+                <div class="dw-card">
+                    <div class="dw-card-title"><i class="fa-solid fa-gears"></i> CAPABILITIES</div>
+                    <div class="skills-container">
+                        <div class="skill-row">
+                            <div class="skill-lbl-row"><span>JavaScript (Algorithms / WebAudio)</span><span>94%</span></div>
+                            <div class="skill-track"><div class="skill-fill" data-pct="94%"></div></div>
+                        </div>
+                        <div class="skill-row">
+                            <div class="skill-lbl-row"><span>CSS Grid / Spatial Math Layouts</span><span>96%</span></div>
+                            <div class="skill-track"><div class="skill-fill" data-pct="96%"></div></div>
+                        </div>
+                        <div class="skill-row">
+                            <div class="skill-lbl-row"><span>Holographic Canvas Renderers</span><span>88%</span></div>
+                            <div class="skill-track"><div class="skill-fill" data-pct="88%"></div></div>
+                        </div>
+                        <div class="skill-row">
+                            <div class="skill-lbl-row"><span>API Integration & System Orchestration</span><span>91%</span></div>
+                            <div class="skill-track"><div class="skill-fill" data-pct="91%"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        // Animate skill bars
+        setTimeout(() => {
+            document.querySelectorAll(".skill-fill").forEach(bar => {
+                bar.style.width = bar.getAttribute("data-pct");
+            });
+        }, 100);
+    } else if (item.type === "project") {
+        drawerBody.innerHTML = `
+            <div class="dw-content">
+                <div class="dw-title-block">
+                    <h2>${item.title}</h2>
+                    <div class="dw-tagline">${item.tagline}</div>
+                </div>
+                <div class="dw-img-box">
+                    <img src="${item.image}" alt="${item.title}" onerror="this.src='https://placehold.co/400x220/0f172a/bd00ff?text=${item.title}'">
+                </div>
+                <p class="dw-desc">${item.description}</p>
+                <div class="dw-card">
+                    <div class="dw-card-title"><i class="fa-solid fa-list-check"></i> CORE BLUEPRINTS</div>
+                    <ul class="dw-list">
+                        ${item.features.map(f => `<li>${f}</li>`).join("")}
+                    </ul>
+                </div>
+                <div class="dw-card">
+                    <div class="dw-card-title"><i class="fa-solid fa-cube"></i> SYSTEM STACK</div>
+                    <div class="pills-row">
+                        ${item.tech.map(t => `<span class="pill">${t}</span>`).join("")}
+                    </div>
+                </div>
+            </div>
+        `;
+    } else if (item.type === "console") {
+        drawerBody.innerHTML = `
+            <div class="dw-content">
+                <div class="dw-title-block">
+                    <h2>Portal Terminal</h2>
+                    <div class="dw-tagline">Simulated BCI Diagnostics Engine</div>
+                </div>
+                <p class="dw-desc">Direct command-line terminal to query Dell's digital node files.</p>
+                <div class="console-box">
+                    <div class="console-history" id="cons-hist">DELL_PORTAL Console OS [Version 4.2.1]
+Type 'help' to query directory nodes.
+                    </div>
+                    <div class="console-input-row">
+                        <span class="console-prompt">&gt;</span>
+                        <input type="text" class="console-input" id="cons-inp" autofocus autocomplete="off">
+                    </div>
+                </div>
+            </div>
+        `;
+        // Attach console terminal listener
+        bindConsoleLogic();
+    } else if (item.type === "contact") {
+        drawerBody.innerHTML = `
+            <div class="dw-content">
+                <div class="dw-title-block">
+                    <h2>Network Sync</h2>
+                    <div class="dw-tagline">Open Channel Transmitter</div>
+                </div>
+                <p class="dw-desc">Establish link credentials to transmit packets directly to Dell's core system.</p>
+                <div class="dw-card">
+                    <form class="sync-form" id="contact-sync-form" onsubmit="event.preventDefault(); handleFormSubmit();">
+                        <div class="form-group">
+                            <label>COMMUNICATOR SIGNAL (NAME):</label>
+                            <input type="text" class="form-input" id="f-name" required placeholder="Guest Identity">
+                        </div>
+                        <div class="form-group">
+                            <label>TRANSMISSION ADDRESS (EMAIL):</label>
+                            <input type="email" class="form-input" id="f-email" required placeholder="name@network.com">
+                        </div>
+                        <div class="form-group">
+                            <label>PACKET PAYLOAD (MESSAGE):</label>
+                            <textarea class="form-input" id="f-msg" rows="4" required style="resize:none;" placeholder="Enter message text..."></textarea>
+                        </div>
+                        <button type="submit" class="form-submit-btn">TRANSMIT PACKET</button>
+                        <div class="form-output" id="f-out"></div>
+                    </form>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// BCI Terminal Console logic
+function bindConsoleLogic() {
+    const input = document.getElementById("cons-inp");
+    const history = document.getElementById("cons-hist");
+    
+    if (!input || !history) return;
+
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            const command = input.value.trim().toLowerCase();
+            input.value = "";
+
+            // Write command to history
+            history.innerHTML += `\n&gt; ${command}`;
+
+            let reply = "";
+            if (command === "help") {
+                reply = "Available command indices:\n- 'about' : Returns profile credentials.\n- 'skills' : Prints validated capabilities.\n- 'projects' : Lists creations catalog.\n- 'clear' : Erases terminal buffers.";
+            } else if (command === "about") {
+                reply = "Identity: Dell\nSpecialization: Interface Architect\nPhilosophy: Dynamic structural decoupling.";
+            } else if (command === "skills") {
+                reply = "Capacities:\n- WebAudio Algorithms: 94%\n- CSS Grid Morphing: 96%\n- Spatial Canvas APIs: 88%";
+            } else if (command === "projects") {
+                reply = "Creations Node Index:\n- 'REM Dream Engine' (Interactive VR sleep visualizer)\n- 'AtmosWeave' (Atmosphere fluid smart clothing)\n- 'ChronosVault' (Geolocated point-cloud memory grid)\n- 'Synapse-Collab' (Brainwave parity developer workstation)";
+            } else if (command === "clear") {
+                history.innerHTML = "DELL_PORTAL Console OS [Version 4.2.1]\nType 'help' to query directory nodes.";
+                return;
+            } else if (command === "overdrive") {
+                reply = "OVERDRIVE PROTOCOL INJECTED. Velocity modifiers increased.";
+                document.getElementById("overdrive-toggle").click();
+            } else if (command === "") {
+                return;
+            } else {
+                reply = `Command error: index '${command}' unrecognized. Enter 'help' for support.`;
+            }
+
+            history.innerHTML += `\n${reply}`;
+            history.scrollTop = history.scrollHeight;
+        }
+    });
+
+    // Auto-focus console
+    input.focus();
+}
+
+// Contact Form submission sequence
+window.handleFormSubmit = function() {
+    const name = document.getElementById("f-name").value;
+    const email = document.getElementById("f-email").value;
+    const msg = document.getElementById("f-msg").value;
+    const output = document.getElementById("f-out");
+    const form = document.getElementById("contact-sync-form");
+
+    output.style.color = "var(--neon-pink)";
+    output.textContent = "SYNCHRONIZING SECURE TUNNEL...";
+    
+    // Disable inputs
+    form.querySelectorAll(".form-input, .form-submit-btn").forEach(i => i.disabled = true);
+
+    setTimeout(() => {
+        output.textContent = "ENCRYPTING PACKET PAYLOAD...";
+        setTimeout(() => {
+            output.style.color = "var(--neon-cyan)";
+            output.textContent = "TRANSMISSION SUCCESSFUL. LINK SYNCHRONIZED.";
+            
+            // Clean fields
+            document.getElementById("f-name").value = "";
+            document.getElementById("f-email").value = "";
+            document.getElementById("f-msg").value = "";
+            
+            // Re-enable inputs
+            form.querySelectorAll(".form-input, .form-submit-btn").forEach(i => i.disabled = false);
+        }, 1200);
+    }, 1000);
+};
+
+// Close drawer panel
+closeDrawerBtn.addEventListener("click", () => {
+    drawer.classList.remove("open");
+    activeNodeId = null;
+    document.querySelectorAll(".satellite-node").forEach(node => node.classList.remove("active"));
+    drawConnections();
+});
+
+// Category filtering
+filterBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+        filterBtns.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        const cat = btn.getAttribute("data-category");
+        filterNodes(cat);
+    });
+});
+
+function filterNodes(category) {
+    const nodes = document.querySelectorAll(".satellite-node");
+    nodes.forEach(node => {
+        const id = node.getAttribute("data-id");
+        const item = nodesData.find(x => x.id === id);
+        if (!item) return;
+
+        if (category === "all" || item.category === category) {
+            node.classList.remove("filtered");
+        } else {
+            node.classList.add("filtered");
+            if (item.id === activeNodeId) {
+                drawer.classList.remove("open");
+                activeNodeId = null;
+            }
+        }
+    });
+
+    drawConnections();
+}
+
+// Gravity Grid Snap Toggle (Locks orbits in linear grids)
+gridSnapBtn.addEventListener("click", () => {
+    gridModeActive = !gridModeActive;
+    gridSnapBtn.classList.toggle("active", gridModeActive);
+
+    const nodes = document.querySelectorAll(".satellite-node");
+    const guides = document.querySelectorAll(".orbit-guide");
+
+    if (gridModeActive) {
+        // Linear grid alignment snap (Layout collapse simulation)
+        guides.forEach(g => g.style.opacity = "0.02");
+        
+        let idx = 0;
+        nodes.forEach(node => {
+            if (node.classList.contains("filtered")) return;
+            const x = center.x + 200 + (Math.floor(idx / 2) * 180) - 33;
+            const y = center.y - 150 + ((idx % 2) * 300) - 33;
+            node.style.left = `${x}px`;
+            node.style.top = `${y}px`;
+            idx++;
+        });
+    } else {
+        // Reset to original concentric orbits
+        guides.forEach(g => g.style.opacity = "1");
+        repositionNodes();
+    }
+    
+    // Delay draw to allow CSS transitions to finish coordinates lookup
+    setTimeout(drawConnections, 300);
+});
+
+// Theme / Overdrive Toggle
+overdriveBtn.addEventListener("click", () => {
+    document.body.classList.toggle("overdrive-on");
+    
+    if (document.body.classList.contains("overdrive-on")) {
+        overdriveBtn.innerHTML = `<i class="fa-solid fa-burst"></i> <span>OVERDRIVE ON</span>`;
+        overdriveBtn.style.color = "#000";
+        overdriveBtn.style.background = "var(--neon-pink)";
+        overdriveBtn.style.boxShadow = "var(--glow-pink)";
+        
+        // Speed up particles
+        particles.forEach(p => p.vy *= 3);
+    } else {
+        overdriveBtn.innerHTML = `<i class="fa-solid fa-radiation"></i> <span>OVERDRIVE</span>`;
+        overdriveBtn.style.color = "var(--neon-purple)";
+        overdriveBtn.style.background = "rgba(255,255,255,0.02)";
+        overdriveBtn.style.boxShadow = "none";
+        
+        // Reset particles speed
+        particles.forEach(p => p.vy /= 3);
+    }
+});
+
+// Click center core node to re-center viewport
+document.getElementById("center-core").addEventListener("click", () => {
+    centerViewport();
+});
+
+// Handle window layout events
+window.addEventListener("resize", () => {
+    drawConnections();
+});
+
+// Initial Setup
+injectNodes();
+window.addEventListener("load", () => {
+    centerViewport();
+    // Allow SVG viewport boundaries to calibrate
+    setTimeout(drawConnections, 80);
+});
+/* Core Design Variables */
+:root {
+    --bg-dark: #04040a;
+    --bg-grid: rgba(255, 255, 255, 0.02);
+    --bg-glass: rgba(12, 12, 24, 0.7);
+    --bg-glass-solid: #090914;
+    
+    --neon-cyan: #00f0ff;
+    --neon-purple: #bd00ff;
+    --neon-pink: #ff007f;
+    --neon-amber: #ffaa00;
+    
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #475569;
+    
+    --font-heading: 'Outfit', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+    
+    --glow-cyan: 0 0 15px rgba(0, 240, 255, 0.4), 0 0 30px rgba(0, 240, 255, 0.1);
+    --glow-purple: 0 0 15px rgba(189, 0, 255, 0.4), 0 0 30px rgba(189, 0, 255, 0.1);
+    --glow-pink: 0 0 15px rgba(255, 0, 127, 0.4), 0 0 30px rgba(255, 0, 127, 0.1);
+    --glow-amber: 0 0 15px rgba(255, 170, 0, 0.4), 0 0 30px rgba(255, 170, 0, 0.1);
+    
+    --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Base resets & scrollbars */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: var(--font-heading);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Custom Scrollbar for Drawer */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.1);
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--neon-cyan);
+}
+
+/* Ambient Canvas Layer */
+#ambient-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -2;
+    pointer-events: none;
+}
+
+/* Cyber Scanlines Overlay */
+.cyber-scanlines {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%, 
+        rgba(0, 0, 0, 0.2) 50%
+    );
+    background-size: 100% 4px;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.25;
+}
+
+/* Header styling */
+.app-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 75px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 30px;
+    background: rgba(4, 4, 10, 0.8);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    z-index: 100;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: 1.5px;
+    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.logo i {
+    font-size: 22px;
+    color: var(--neon-cyan);
+    -webkit-text-fill-color: initial;
+}
+
+.controls-panel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 5px 10px;
+    border-radius: 30px;
+}
+
+.ctrl-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    padding-left: 8px;
+}
+
+.filter-btn {
+    background: transparent;
+    border: none;
+    padding: 6px 14px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 20px;
+    transition: var(--transition);
+}
+
+.filter-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.filter-btn.active {
+    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+    color: #000;
+    font-weight: 800;
+    box-shadow: 0 4px 15px rgba(0, 240, 255, 0.2);
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.cyber-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.cyber-btn:hover {
+    border-color: var(--neon-cyan);
+    background: rgba(0, 240, 255, 0.05);
+    color: var(--neon-cyan);
+    box-shadow: var(--glow-cyan);
+}
+
+.cyber-btn.active {
+    background: rgba(0, 240, 255, 0.1);
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+}
+
+.cyber-btn.secondary {
+    border-color: var(--neon-purple);
+}
+
+.cyber-btn.secondary:hover {
+    border-color: var(--neon-purple);
+    background: rgba(189, 0, 255, 0.05);
+    color: var(--neon-purple);
+    box-shadow: var(--glow-purple);
+}
+
+/* Panoramic Workspace */
+.workspace {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    padding-top: 75px;
+    position: relative;
+}
+
+/* Map Viewport Area */
+.viewport {
+    flex-grow: 1;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    cursor: grab;
+}
+
+.viewport:active {
+    cursor: grabbing;
+}
+
+.line-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.map-board {
+    position: absolute;
+    width: 2400px;
+    height: 2400px;
+    transform-origin: center center;
+    transition: transform 0.1s ease-out;
+}
+
+/* Core Profile Node (Centered) */
+.core-profile {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 10;
+}
+
+.avatar-box {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    padding: 3px;
+    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.3);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.avatar-box:hover {
+    transform: scale(1.06);
+    box-shadow: 0 0 35px rgba(0, 240, 255, 0.5), 0 0 15px #fff;
+}
+
+.avatar-box img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #090915;
+}
+
+.core-title {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    font-family: var(--font-heading);
+}
+
+.core-name {
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: 2px;
+}
+
+.core-sub {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--neon-purple);
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin-top: 3px;
+}
+
+/* Orbit Path Rings */
+.orbit-guide {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 1px dashed rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.ring-1 { width: 380px; height: 380px; animation: spinClockwise 60s infinite linear; }
+.ring-2 { width: 680px; height: 680px; animation: spinClockwise 120s infinite linear reverse; }
+.ring-3 { width: 980px; height: 980px; animation: spinClockwise 180s infinite linear; }
+
+@keyframes spinClockwise {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Satellite Nodes */
+.satellite-node {
+    position: absolute;
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
+    background: #090914;
+    border: 2px solid var(--n-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--n-color);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+    cursor: pointer;
+    z-index: 15;
+    transition: var(--transition);
+}
+
+.satellite-node::before {
+    content: '';
+    position: absolute;
+    top: -5px; left: -5px; right: -5px; bottom: -5px;
+    border: 1px solid var(--n-color);
+    border-radius: 50%;
+    opacity: 0.15;
+    transition: var(--transition);
+}
+
+.satellite-node:hover {
+    transform: scale(1.15);
+    background: var(--n-color);
+    color: #000;
+    box-shadow: var(--n-glow);
+}
+
+.satellite-node:hover::before {
+    transform: scale(1.2);
+    opacity: 0.4;
+}
+
+.satellite-node.active {
+    background: var(--n-color);
+    color: #000;
+    box-shadow: var(--n-glow), 0 0 10px #fff;
+}
+
+.satellite-node i {
+    font-size: 22px;
+}
+
+.node-title-label {
+    position: absolute;
+    top: 74px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    background: rgba(9, 9, 20, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 12px;
+    pointer-events: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: var(--transition);
+}
+
+.satellite-node:hover .node-title-label,
+.satellite-node.active .node-title-label {
+    background: var(--text-primary);
+    color: #000;
+    border-color: #fff;
+    font-weight: bold;
+}
+
+.satellite-node.filtered {
+    opacity: 0.15;
+    pointer-events: none;
+}
+
+/* System HUD UI */
+.system-hud {
+    position: absolute;
+    top: 25px;
+    left: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    background: rgba(4, 4, 10, 0.5);
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.03);
+    pointer-events: none;
+}
+
+.hud-item {
+    display: flex;
+    gap: 8px;
+}
+
+.hud-item .lbl {
+    color: var(--text-muted);
+}
+
+.navigation-tooltip {
+    position: absolute;
+    bottom: 25px;
+    left: 30px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    background: rgba(4, 4, 10, 0.5);
+    padding: 6px 15px;
+    border-radius: 20px;
+    pointer-events: none;
+}
+
+/* Details Sliding Drawer Panel */
+.details-drawer {
+    width: 500px;
+    height: 100%;
+    background: var(--bg-glass);
+    backdrop-filter: blur(25px);
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    z-index: 90;
+    transform: translateX(100%);
+    box-shadow: -20px 0 50px rgba(0, 0, 0, 0.7);
+    transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.details-drawer.open {
+    transform: translateX(0);
+}
+
+.drawer-header {
+    height: 80px;
+    padding: 0 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.drawer-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: bold;
+    color: var(--dw-color, var(--neon-cyan));
+    border: 1px solid var(--dw-color, var(--neon-cyan));
+}
+
+.close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 22px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.close-btn:hover {
+    color: var(--neon-pink);
+}
+
+.drawer-scroll-container {
+    flex-grow: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+/* Drawer Placeholder Empty State */
+.drawer-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    color: var(--text-muted);
+    gap: 15px;
+    padding: 0 20px;
+}
+
+.drawer-placeholder i {
+    font-size: 45px;
+    color: var(--text-muted);
+    animation: floatGhost 3s infinite ease-in-out;
+}
+
+@keyframes floatGhost {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.drawer-placeholder h3 {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+/* Realized Content Cards */
+.dw-content {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.dw-title-block h2 {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.15;
+}
+
+.dw-tagline {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--dw-color, var(--neon-cyan));
+    margin-top: 5px;
+}
+
+.dw-desc {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+.dw-img-box {
+    width: 100%;
+    height: 220px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+.dw-img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.dw-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.dw-card-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dw-card-title i {
+    color: var(--dw-color, var(--neon-cyan));
+}
+
+/* Skills progress gauges */
+.skills-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.skill-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.skill-lbl-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.skill-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.skill-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--neon-cyan), var(--dw-color, var(--neon-cyan)));
+    border-radius: 4px;
+    width: 0;
+    transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Feature bullets */
+.dw-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dw-list li {
+    position: relative;
+    padding-left: 22px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.dw-list li::before {
+    content: '\f111';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 6px;
+    position: absolute;
+    left: 5px;
+    top: 6px;
+    color: var(--dw-color, var(--neon-cyan));
+}
+
+/* Tech pills */
+.pills-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.pill {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 3px 8px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+}
+
+/* Interactive Console Emulator */
+.console-box {
+    background: #000;
+    border: 1px solid rgba(0, 240, 255, 0.15);
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 15px;
+    height: 280px;
+    display: flex;
+    flex-direction: column;
+    color: #00ff66;
+}
+
+.console-history {
+    flex-grow: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    white-space: pre-wrap;
+}
+
+.console-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    padding-top: 8px;
+    margin-top: 8px;
+}
+
+.console-prompt {
+    color: var(--neon-cyan);
+}
+
+.console-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #00ff66;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    flex-grow: 1;
+}
+
+/* Interactive Network Form */
+.sync-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.form-input {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 10px 14px;
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-family: var(--font-heading);
+    font-size: 14px;
+    outline: none;
+    transition: var(--transition);
+}
+
+.form-input:focus {
+    border-color: var(--neon-pink);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.form-submit-btn {
+    background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));
+    border: none;
+    color: #000;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 13px;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: var(--glow-pink);
+    transition: var(--transition);
+}
+
+.form-submit-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 20px rgba(255, 0, 127, 0.5);
+}
+
+.form-output {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--neon-pink);
+    padding: 5px;
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+    .workspace {
+        flex-direction: column;
+    }
+    
+    .details-drawer {
+        width: 100vw;
+        height: 420px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        transform: translateY(100%);
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .details-drawer.open {
+        transform: translateY(0);
+        transform: translateX(0);
+    }
+    
+    .app-header {
+        flex-direction: column;
+        height: auto;
+        padding: 15px;
+        gap: 12px;
+    }
+    
+    .workspace {
+        padding-top: 150px;
+    }
+    
+    .controls-panel {
+        width: 100%;
+        justify-content: center;
+    }
+}
